@@ -1,0 +1,46 @@
+import java.util.regex.Pattern
+
+apply plugin: 'com.android.application'
+apply from: "${project.rootDir}/config.gradle"
+
+android {
+    compileSdkVersion project.ext.compileSdkVersion
+    defaultConfig {
+        applicationId getParamManifest("package")
+        minSdkVersion project.ext.minSdkVer
+        targetSdkVersion project.ext.targetSdkVer
+        versionCode Integer.parseInt(getParamManifest("versionCode"))
+        versionName getParamManifest("versionName")
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            //打包多个dex
+            multiDexEnabled false
+            //混淆
+            minifyEnabled false
+            //zipAlign优化，让系统可以跨进程引用资源，提高复用，优化效率
+            zipAlignEnabled true
+            //去掉无用资源文件
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:28.0.0-rc01'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+def getParamManifest(param) {
+    def manifestFile = file("src/main/AndroidManifest.xml")
+    def pattern = Pattern.compile("$param=\"(.*)\"");
+    def matcher = pattern.matcher(manifestFile.getText())
+    matcher.find()
+    return matcher.group(1)
+}
